@@ -249,16 +249,13 @@ void manageSpeedo()
     else if ((currentTime - lastInputTime) > NO_PULSE_WAITTIME)
     {
       inputWidth1 = inputWidth2 = inputWidth3 = inputWidth4 = 0;
+      rollingAverage = 0;
     }
       
     // CONTROL
-    Serial.print("rollingAverage= ");
-    Serial.println(rollingAverage);
     outputPeriod = rollingAverage / PULSES_REV_T56 * PULSES_REV_W58; // Removed the extra 1000L as working in millis    
     
     // REVERSE LOCKOUT
-    Serial.print("outputPeriod= ");
-    Serial.println(outputPeriod);
     if (outputPeriod == 0)
       digitalWrite(lockoutOutputPin, HIGH);
     else
@@ -298,7 +295,7 @@ void setup()
   
   // Serial Comms ----------------------------------------------------------
   Serial.begin(9600);
-  Serial.println("UZA80 Exhaust-Speedo Controller : 28 February 2011");
+  Serial.println("UZA80 Exhaust-Speedo Controller : 8th May 2011");
   // -----------------------------------------------------------------------
 }
 
