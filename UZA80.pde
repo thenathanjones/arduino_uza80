@@ -76,7 +76,7 @@ void checkFirstPassMuffler()
   if (firstTimeComplete == 0)
   {
     // turn the relay on to close it
-    analogWrite(relayClosePin, 255);
+    digitalWrite(relayClosePin, HIGH);
 
     // keep track of when we started opening it
     lastTime = currentTime;
@@ -89,7 +89,7 @@ void checkFirstPassMuffler()
     }
 
     // stop, we'll assume it's closed now
-    analogWrite(relayClosePin, 0);
+    digitalWrite(relayClosePin, LOW);
 
     // signal we've completed the first cycle
     firstTimeComplete = 1;
@@ -143,10 +143,8 @@ void manageExhaustState()
   case 0:
     if (currentExhaustInput == LOW)
     {
-      analogWrite(13, 0);
-
       // turn the relay on to open it
-      analogWrite(relayOpenPin, 255);
+      digitalWrite(relayOpenPin, HIGH);
 
       // keep track of when we started opening it
       lastTime = currentTime;
@@ -160,7 +158,7 @@ void manageExhaustState()
     if ((currentTime - lastTime) > MOVEMENT_DELAY)
     {
       // turn the relay off
-      analogWrite(relayOpenPin, 0);
+      digitalWrite(relayOpenPin, LOW);
 
       // change to open state
       exhaustState = 2;
@@ -188,7 +186,7 @@ void manageExhaustState()
     else if ((currentTime - lastTime) > PRE_CLOSE_DELAY)
     {
       // turn the relay on to close it
-      analogWrite(relayClosePin, 255);
+      digitalWrite(relayClosePin, HIGH);
 
       // keep track of when we started closing it
       lastTime = currentTime;
@@ -202,7 +200,7 @@ void manageExhaustState()
     if ((currentTime - lastTime) > MOVEMENT_DELAY)
     {
       // turn the relay off
-      analogWrite(relayClosePin, 0);
+      digitalWrite(relayClosePin, LOW);
 
       // change to close state
       exhaustState = 0;
@@ -249,6 +247,7 @@ void manageSpeedo()
     else if ((currentTime - lastInputTime) > NO_PULSE_WAITTIME)
     {
       inputWidth1 = inputWidth2 = inputWidth3 = inputWidth4 = 0;
+      
       rollingAverage = 0;
     }
       
