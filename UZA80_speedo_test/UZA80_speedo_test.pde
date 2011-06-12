@@ -36,20 +36,21 @@ int PULSES_REV_T56 = 17;
 
 void manageSpeedo()
 {      
-    rollingAverage = 100;
+    rollingAverage = 17;
   
     // CONTROL
-    outputPeriod = rollingAverage / PULSES_REV_T56 * PULSES_REV_W58; // Removed the extra 1000L as working in millis    
+    outputPeriod = rollingAverage * 1000 / PULSES_REV_T56 * PULSES_REV_W58 / 1000; // Removed the extra 1000L as working in millis    
+    
+    outputPeriod = 5;
     
     // SIGNAL GENERATOR   
     if( (currentTime - lastOutputTime) > outputPeriod  )
     {      
         currentSpeedoOutput = currentSpeedoOutput == LOW ? HIGH : LOW;
-        
-        Serial.print("Generating...");
-        Serial.println(currentSpeedoOutput == LOW ? "LOW" : "HIGH");
               
         digitalWrite(speedoOutputPin, currentSpeedoOutput);
+        
+        digitalWrite(13, currentSpeedoOutput);
         
         lastOutputTime = currentTime; 
     }
@@ -61,6 +62,8 @@ void setup()
   pinMode(speedoOutputPin, OUTPUT);
   // Lockout Solenoid
   pinMode(lockoutOutputPin, OUTPUT);
+  
+  pinMode(13, OUTPUT);
   
   digitalWrite(lockoutOutputPin, HIGH);
   // -----------------------------------------------------------------------

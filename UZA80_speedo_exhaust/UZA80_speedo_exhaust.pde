@@ -1,29 +1,29 @@
 
 // Exhaust Edge Detector
 int exhaustInputPin = 4;
-int currentExhaustInput = LOW;
+int currentExhaustInput = HIGH;
 int exhaustPulse = 0;
-int exhaustInput1 = LOW;
-int exhaustInput2 = LOW;
-int exhaustInput3 = LOW;
-int exhaustInput4 = LOW;
-int lastExhaustInput = LOW;
+int exhaustInput1 = HIGH;
+int exhaustInput2 = HIGH;
+int exhaustInput3 = HIGH;
+int exhaustInput4 = HIGH;
+int lastExhaustInput = HIGH;
 
 // T56 Edge Detector
 int speedoInputPin = 12; // via LM1815
 int currentSpeedoInput = LOW;
 int lastSpeedoInput = LOW;
-unsigned long lastInputTime = 0;
-unsigned long currentInputWidth = 0;
+unsigned long lastInputTime = 1000L;
+unsigned long currentInputWidth = 1000L;
 // These keep track of the time between pulses on the speedo sensor
-unsigned long inputWidth1 = 0;
-unsigned long inputWidth2 = 0;
-unsigned long inputWidth3 = 0;
-unsigned long inputWidth4 = 0;
+unsigned long inputWidth1 = 1000L;
+unsigned long inputWidth2 = 1000L;
+unsigned long inputWidth3 = 1000L;
+unsigned long inputWidth4 = 1000L;
 // Indicator to work out where in the values for the average to insert this
 short speedoPulse = 1;
 // This is the rolling average of the above and used for the square wave generation
-unsigned long rollingAverage = 0;
+unsigned long rollingAverage = 1000L;
 
 // Signal Generator
 int currentSpeedoOutput = LOW;
@@ -67,8 +67,11 @@ int PULSES_REV_W58 = 4;
 // Number of pulses per rev on the T56 speedo sensor
 int PULSES_REV_T56 = 17;
 
+// Conversion factor for the speedo gear
+int SPEEDO_GEAR_FACTOR = 3;
+
 // How long to wait for a new pulse before determining there isn't one coming
-int NO_PULSE_WAITTIME = 150L;
+int NO_PULSE_WAITTIME = 1000L;
 
 void checkFirstPassMuffler()
 {
@@ -214,8 +217,12 @@ void manageSpeedo()
 {
     // EDGE DETECTOR
     currentSpeedoInput = digitalRead(speedoInputPin);
+    
     if (currentSpeedoInput != lastSpeedoInput)
-    {
+    { 
+      // Detect rising edge
+      if (lastSpeedoInput == LOW && currentSpeedoInput == HIGH)
+      {
         currentInputWidth = currentTime - lastInputTime;
         
         switch (speedoPulse)
@@ -240,19 +247,20 @@ void manageSpeedo()
         
         rollingAverage = (inputWidth1 + inputWidth2 + inputWidth3 + inputWidth4) / 4;
         
-        lastSpeedoInput = currentSpeedoInput;
-        
         lastInputTime = currentTime;
+      }
+      
+      lastSpeedoInput = currentSpeedoInput;
     }
     else if ((currentTime - lastInputTime) > NO_PULSE_WAITTIME)
     {
-      inputWidth1 = inputWidth2 = inputWidth3 = inputWidth4 = 0;
+      inputWidth1 = inputWidth2 = inputWidth3 = inputWidth4 = 5000L;
       
-      rollingAverage = 0;
+      rollingAverage = 5000L;
     }
       
     // CONTROL
-    outputPeriod = rollingAverage / PULSES_REV_T56 * PULSES_REV_W58; // Removed the extra 1000L as working in millis    
+    outputPeriod = rollingAverage * 1000 * PULSES_REV_T56 * SPEEDO_GEAR_FACTOR / PULSES_REV_W58 / 1000;    
     
     // REVERSE LOCKOUT
     if (outputPeriod == 0)
