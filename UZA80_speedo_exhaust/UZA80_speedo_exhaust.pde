@@ -2,7 +2,7 @@
 // Exhaust Edge Detector
 int exhaustInputPin = 4;
 int currentExhaustInput = HIGH;
-int exhaustPulse = 0;
+int exhaustPulse = 1;
 int exhaustInput1 = HIGH;
 int exhaustInput2 = HIGH;
 int exhaustInput3 = HIGH;
@@ -13,17 +13,17 @@ int lastExhaustInput = HIGH;
 int speedoInputPin = 12; // via LM1815
 int currentSpeedoInput = LOW;
 int lastSpeedoInput = LOW;
-unsigned long lastInputTime = 1000L;
-unsigned long currentInputWidth = 1000L;
+unsigned long lastInputTime = 0;
+unsigned long currentInputWidth = 5000L;
 // These keep track of the time between pulses on the speedo sensor
-unsigned long inputWidth1 = 1000L;
-unsigned long inputWidth2 = 1000L;
-unsigned long inputWidth3 = 1000L;
-unsigned long inputWidth4 = 1000L;
+unsigned long inputWidth1 = 5000L;
+unsigned long inputWidth2 = 5000L;
+unsigned long inputWidth3 = 5000L;
+unsigned long inputWidth4 = 5000L;
 // Indicator to work out where in the values for the average to insert this
 short speedoPulse = 1;
 // This is the rolling average of the above and used for the square wave generation
-unsigned long rollingAverage = 1000L;
+unsigned long rollingAverage = 5000L;
 
 // Signal Generator
 int currentSpeedoOutput = LOW;
@@ -73,11 +73,8 @@ int SPEEDO_GEAR_FACTOR = 3;
 // How long to wait for a new pulse before determining there isn't one coming
 int NO_PULSE_WAITTIME = 1000L;
 
-void checkFirstPassMuffler()
+void setInitialMufflerState()
 {
-  // make sure it's closed to begin with
-  if (firstTimeComplete == 0)
-  {
     // turn the relay on to close it
     digitalWrite(relayClosePin, HIGH);
 
@@ -93,10 +90,6 @@ void checkFirstPassMuffler()
 
     // stop, we'll assume it's closed now
     digitalWrite(relayClosePin, LOW);
-
-    // signal we've completed the first cycle
-    firstTimeComplete = 1;
-  }
 }
 
 int filteredExhaustInput()
@@ -104,19 +97,19 @@ int filteredExhaustInput()
   int reading = digitalRead(exhaustInputPin);
   switch(exhaustPulse)
   {
-    case 0:
+    case 1:
     exhaustInput1 = reading;
     exhaustPulse++;
     break;
-    case 1:
+    case 2:
     exhaustInput2 = reading;
     exhaustPulse++;
     break;
-    case 2:
+    case 3:
     exhaustInput3 = reading;
     exhaustPulse++;
     break;
-    case 3:
+    case 4:
     exhaustInput4 = reading;
     exhaustPulse = 0;
     break;
@@ -229,21 +222,22 @@ void manageSpeedo()
         {
           case 1:
           inputWidth1 = currentInputWidth;
+          speedoPulse++;
           break;
           case 2:
           inputWidth2 = currentInputWidth;
+          speedoPulse++;
           break;
           case 3:
           inputWidth3 = currentInputWidth;
+          speedoPulse++;
           break;
           case 4:
           inputWidth4 = currentInputWidth;
+          speedoPulse = 1;
           break;
         }
         speedoPulse++;
-        
-        if (speedoPulse == 5)
-          speedoPulse = 1;
         
         rollingAverage = (inputWidth1 + inputWidth2 + inputWidth3 + inputWidth4) / 4;
         
@@ -302,17 +296,18 @@ void setup()
   
   // Serial Comms ----------------------------------------------------------
   Serial.begin(9600);
-  Serial.println("UZA80 Exhaust-Speedo Controller : 8th May 2011");
+  Serial.println("UZA80 Exhaust-Speedo Controller");
   // -----------------------------------------------------------------------
+  
+  // Initial Muffler State -------------------------------------------------
+  setInitialMufflerState();
 }
 
 void loop()
 {    
   // get the current time for our calculations
   currentTime = millis();
-  
-  checkFirstPassMuffler();
-  
+
   manageExhaustState();
   
   manageSpeedo();

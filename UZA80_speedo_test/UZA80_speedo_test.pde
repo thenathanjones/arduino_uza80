@@ -41,7 +41,7 @@ void manageSpeedo()
     // CONTROL
     outputPeriod = rollingAverage * 1000 / PULSES_REV_T56 * PULSES_REV_W58 / 1000; // Removed the extra 1000L as working in millis    
     
-    outputPeriod = 5;
+    outputPeriod = 1;
     
     // SIGNAL GENERATOR   
     if( (currentTime - lastOutputTime) > outputPeriod  )
