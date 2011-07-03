@@ -21,10 +21,10 @@
 #define OCIE1A 1
 #define TOIE1 0
 
-int SPEEDO_PULSES_T56 = 17;
-int SPEEDO_PULSES_W58 = 4;
-int W58_GEAR_BOX_SIDE = 11;
-int W58_GEAR_SENSOR_SIDE = 33;
+// SPEEDO_PULSES_T56(17) * W58_GEAR_SENSOR_SIDE(33) / SPEEDO_PULSES_W58(4) / W58_GEAR_BOX_SIDE(11)
+unsigned long T56_TO_W58_FACTOR = 1275L;
+// 1 / (2000 / 15625)
+unsigned long PRESCALER_FACTOR = 7812L;
 
 int speedoInterrupt = 0; 
 
@@ -33,9 +33,10 @@ int relayOpenPin = 2;
 int relayClosePin = 1;
 int lockoutOutputPin = 11;
 
-unsigned long OCRegisterValue = 2500; 
+unsigned long OCRegisterValue = 2500L; 
 
 volatile unsigned long lastPulseAt = 0;
+volatile unsigned long currentPeriod = 0;
 unsigned long currentMicros = 0;
 
 int currentExhaustInput = HIGH;
@@ -48,7 +49,7 @@ int lastExhaustInput = HIGH;
 
 /* States
  * 0 - closed
- * 1 - opening
+ * 1 - opening  
  * 2 - open
  * 3 - delay
  * 4 - closing
@@ -87,15 +88,16 @@ void closeMuffler()
   digitalWrite(relayClosePin, LOW);
 }
 
-ISR(TIMER1_COMPA_vect) // Interrupt Service Routine - Timer 1 - CompA
+ISR(TIMER1_COMPA_vect)
 {
+  OCRegisterValue = currentPeriod * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
   OCR1A = OCRegisterValue; //Update OC Register with new data
 }
 
 void speedoPulsed()
 {
   currentMicros = micros();
-  OCRegisterValue = (currentMicros - lastPulseAt) / SPEEDO_PULSES_W58 / W58_GEAR_BOX_SIDE * SPEEDO_PULSES_T56 / 100 * W58_GEAR_SENSOR_SIDE / 10;
+  currentPeriod = (currentMicros - lastPulseAt);
   lastPulseAt = currentMicros;
 }
 
@@ -256,10 +258,9 @@ void setupSpeedoControl()
 {
   DDRB = DDRB | B00000010;
   setupOutputCompare();
-  //OCRegisterValue = 5000 * SPEEDO_PULSES_T56 * W58_GEAR_SENSOR_SIDE / SPEEDO_PULSES_W58 / W58_GEAR_BOX_SIDE * 78 / 10000;
-  OCRegisterValue = 5000 / W58_GEAR_BOX_SIDE / SPEEDO_PULSES_W58 * SPEEDO_PULSES_T56 / 10 * W58_GEAR_SENSOR_SIDE / 10 * 78 / 100;
+  // Uncomment to test
+  // OCRegisterValue = 131L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
   OCR1A = OCRegisterValue;
-  Serial.println(OCR1A);
   
   pinMode(lockoutOutputPin, OUTPUT);
     
