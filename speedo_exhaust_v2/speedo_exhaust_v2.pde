@@ -29,13 +29,11 @@ int W58_GEAR_SENSOR_SIDE = 33;
 int speedoInterrupt = 0; 
 
 int exhaustInputPin = 3;
-int relayOpenPin = 6;
-int relayClosePin = 7;
-int speedoOutputPin = 10;
+int relayOpenPin = 2;
+int relayClosePin = 1;
 int lockoutOutputPin = 11;
 
-unsigned long current_period = 0; //Input from T56
-unsigned long OCRegisterValue = 52; //Value used in OC register
+unsigned long OCRegisterValue = 2500; 
 
 volatile unsigned long lastPulseAt = 0;
 unsigned long currentMicros = 0;
@@ -97,7 +95,7 @@ ISR(TIMER1_COMPA_vect) // Interrupt Service Routine - Timer 1 - CompA
 void speedoPulsed()
 {
   currentMicros = micros();
-  OCRRegisterValue = (currentMicros - lastPulseAt) * SPEEDO_PULSES_T56 * W58_GEAR_SENSOR_SIDE / W58_GEAR_BOX_SIDE / SPEEDO_PULSES_W58 / 10;
+  OCRegisterValue = (currentMicros - lastPulseAt) / SPEEDO_PULSES_W58 / W58_GEAR_BOX_SIDE * SPEEDO_PULSES_T56 / 100 * W58_GEAR_SENSOR_SIDE / 10;
   lastPulseAt = currentMicros;
 }
 
@@ -256,12 +254,14 @@ void setupOutputCompare()
 
 void setupSpeedoControl()
 {
-  DDRB = DDRB | B00100000;
+  DDRB = DDRB | B00000010;
   setupOutputCompare();
+  //OCRegisterValue = 5000 * SPEEDO_PULSES_T56 * W58_GEAR_SENSOR_SIDE / SPEEDO_PULSES_W58 / W58_GEAR_BOX_SIDE * 78 / 10000;
+  OCRegisterValue = 5000 / W58_GEAR_BOX_SIDE / SPEEDO_PULSES_W58 * SPEEDO_PULSES_T56 / 10 * W58_GEAR_SENSOR_SIDE / 10 * 78 / 100;
   OCR1A = OCRegisterValue;
+  Serial.println(OCR1A);
   
   pinMode(lockoutOutputPin, OUTPUT);
-  pinMode(speedoOutputPin, OUTPUT);
     
   // External Interrupt
   attachInterrupt(speedoInterrupt, speedoPulsed, RISING);
@@ -274,14 +274,14 @@ void setupSerialComms()
 }
 
 void setup()
-{    
+{     
+  setupSerialComms();
+  
   setupVarexControl();
 
   closeMuffler();
 
   setupSpeedoControl();
-
-  setupSerialComms();
 }
 
 void loop() 
