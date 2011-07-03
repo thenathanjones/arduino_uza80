@@ -24,7 +24,7 @@
 // SPEEDO_PULSES_T56(17) * W58_GEAR_SENSOR_SIDE(33) / SPEEDO_PULSES_W58(4) / W58_GEAR_BOX_SIDE(11)
 unsigned long T56_TO_W58_FACTOR = 1275L;
 // 1 / (2000 / 15625)
-unsigned long PRESCALER_FACTOR = 7812L;
+unsigned long PRESCALER_FACTOR = 7812L; 
 
 int speedoInterrupt = 0; 
 
@@ -33,11 +33,12 @@ int relayOpenPin = 2;
 int relayClosePin = 1;
 int lockoutOutputPin = 11;
 
-unsigned long OCRegisterValue = 2500L; 
+volatile int imCalled = 0;
 
 volatile unsigned long lastPulseAt = 0;
 volatile unsigned long currentPeriod = 0;
 unsigned long currentMicros = 0;
+unsigned long OCRegisterValue = 2500L;
 
 int currentExhaustInput = HIGH;
 int exhaustPulse = 1;
@@ -90,8 +91,9 @@ void closeMuffler()
 
 ISR(TIMER1_COMPA_vect)
 {
+  imCalled = 1;
   OCRegisterValue = currentPeriod * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
-  OCR1A = OCRegisterValue; //Update OC Register with new data
+  OCR1A = OCRegisterValue;
 }
 
 void speedoPulsed()
@@ -247,7 +249,7 @@ void setupOutputCompare()
    TIMSK1 = B00000000
            //  | _BV(ICIE1)     //Uncomment to set as one.
            //  | _BV(OCIE1B)    //Uncomment to set as one.
-           //  | _BV(OCIE1A)    //Uncomment to set as one.
+               | _BV(OCIE1A)    //Uncomment to set as one.
            //  | _BV(TOIE1)     //Uncomment to set as one.
                ;
 
@@ -258,7 +260,7 @@ void setupSpeedoControl()
 {
   DDRB = DDRB | B00000010;
   setupOutputCompare();
-  // Uncomment to test
+  // Uncomment to test specific values
   // OCRegisterValue = 131L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
   OCR1A = OCRegisterValue;
   
