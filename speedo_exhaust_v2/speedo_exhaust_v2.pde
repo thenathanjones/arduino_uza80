@@ -33,8 +33,6 @@ int relayOpenPin = 7;
 int relayClosePin = 3;
 int lockoutOutputPin = 11;
 
-volatile int imCalled = 0;
-
 volatile unsigned long lastPulseAt = 0;
 volatile unsigned long currentPeriod = 0;
 unsigned long currentMicros = 0;
@@ -91,15 +89,19 @@ void closeMuffler()
 
 ISR(TIMER1_COMPA_vect)
 {
-  imCalled = 1;
   OCRegisterValue = currentPeriod * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
+  // Uncomment to test specific values
+  // OCRegisterValue = 58L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
   OCR1A = OCRegisterValue;
 }
 
 void speedoPulsed()
 {
+  Serial.println("I got one!");
   currentMicros = micros();
+  Serial.println(currentMicros);
   currentPeriod = (currentMicros - lastPulseAt);
+  Serial.println(micros());
   lastPulseAt = currentMicros;
 }
 
@@ -137,7 +139,6 @@ int filteredExhaustInput()
   }
   else if (exhaustInput1 == HIGH && exhaustInput2 == HIGH && exhaustInput3 == HIGH && exhaustInput4 == HIGH)
   {
-    Serial.println("I'm high");
     return HIGH;
   }
   else
@@ -261,8 +262,6 @@ void setupSpeedoControl()
 {
   DDRB = DDRB | B00000010;
   setupOutputCompare();
-  // Uncomment to test specific values
-  // OCRegisterValue = 131L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
   OCR1A = OCRegisterValue;
   
   pinMode(lockoutOutputPin, OUTPUT);
