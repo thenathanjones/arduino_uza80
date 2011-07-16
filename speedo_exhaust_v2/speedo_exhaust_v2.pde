@@ -97,11 +97,8 @@ ISR(TIMER1_COMPA_vect)
 
 void speedoPulsed()
 {
-  Serial.println("I got one!");
   currentMicros = micros();
-  Serial.println(currentMicros);
   currentPeriod = (currentMicros - lastPulseAt);
-  Serial.println(micros());
   lastPulseAt = currentMicros;
 }
 
