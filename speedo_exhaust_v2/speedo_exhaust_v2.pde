@@ -28,9 +28,9 @@ unsigned long PRESCALER_FACTOR = 7812L;
 
 int speedoInterrupt = 0; 
 
-int exhaustInputPin = 3;
-int relayOpenPin = 2;
-int relayClosePin = 1;
+int exhaustInputPin = 4;
+int relayOpenPin = 7;
+int relayClosePin = 3;
 int lockoutOutputPin = 11;
 
 volatile int imCalled = 0;
@@ -127,7 +127,7 @@ int filteredExhaustInput()
     break;
     case 4:
     exhaustInput4 = reading;
-    exhaustPulse = 0;
+    exhaustPulse = 1;
     break;
   }
   
@@ -137,6 +137,7 @@ int filteredExhaustInput()
   }
   else if (exhaustInput1 == HIGH && exhaustInput2 == HIGH && exhaustInput3 == HIGH && exhaustInput4 == HIGH)
   {
+    Serial.println("I'm high");
     return HIGH;
   }
   else
@@ -273,7 +274,7 @@ void setupSpeedoControl()
 void setupSerialComms()
 {
   Serial.begin(9600);
-  Serial.println("UZA80 Exhaust-Speedo Controller");
+  Serial.println(" UZA80 Exhaust-Speedo Controller");
 }
 
 void setup()
