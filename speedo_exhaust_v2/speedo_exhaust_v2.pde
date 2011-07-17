@@ -34,17 +34,15 @@ int relayClosePin = 3;
 int lockoutOutputPin = 11;
 
 // Signal Generator for testing purposes
-int signalGeneratorPin = 8;
-unsigned long signalGeneratorPeriod = 4452L;
+int signalGeneratorPin = 13;
+unsigned long signalGeneratorPeriod = 5240L;
 unsigned long lastStateChange = 0L;
 unsigned long generatorMicros = 0L;
-int generatorState = LOW;
 
 volatile unsigned long lastPulseAt = 0L;
 volatile unsigned long previousPulseAt = 0L;
 volatile unsigned long currentPeriod = 0L;
-unsigned long currentMicros = 0L;
-unsigned long OCRegisterValue = 2500L;
+volatile unsigned long OCRegisterValue = 2500L;
 
 int currentExhaustInput = HIGH;
 int exhaustPulse = 1;
@@ -97,9 +95,10 @@ void closeMuffler()
 
 ISR(TIMER1_COMPA_vect)
 {
-  OCRegisterValue = currentPeriod * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10L;
+  OCRegisterValue = currentPeriod * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 100L;
   // Uncomment to test specific values
-  // OCRegisterValue = 58L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10L;
+  // OCRegisterValue = 5240L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 100L;
+  // OCRegisterValue = 71;
   OCR1A = OCRegisterValue;
 }
 
@@ -119,9 +118,10 @@ void manageSignalGenerator()
   generatorMicros = micros();
   if ((generatorMicros - lastStateChange) > signalGeneratorPeriod)
   {
-    generatorState = !generatorState;
+    digitalWrite(signalGeneratorPin, HIGH);
     lastStateChange = generatorMicros;
-    digitalWrite(signalGeneratorPin, generatorState);
+    delayMicroseconds(90);
+    digitalWrite(signalGeneratorPin, LOW);
   }
 }
 
@@ -316,5 +316,5 @@ void loop()
   manageSpeedo();
   
   // Uncomment this to for generating a testing signal
-  manageSignalGenerator();
+  // manageSignalGenerator();
 }
