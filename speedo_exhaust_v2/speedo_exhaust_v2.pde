@@ -33,9 +33,17 @@ int relayOpenPin = 7;
 int relayClosePin = 3;
 int lockoutOutputPin = 11;
 
-volatile unsigned long lastPulseAt = 0;
-volatile unsigned long currentPeriod = 0;
-unsigned long currentMicros = 0;
+// Signal Generator for testing purposes
+int signalGeneratorPin = 8;
+unsigned long signalGeneratorPeriod = 4452L;
+unsigned long lastStateChange = 0L;
+unsigned long generatorMicros = 0L;
+int generatorState = LOW;
+
+volatile unsigned long lastPulseAt = 0L;
+volatile unsigned long previousPulseAt = 0L;
+volatile unsigned long currentPeriod = 0L;
+unsigned long currentMicros = 0L;
 unsigned long OCRegisterValue = 2500L;
 
 int currentExhaustInput = HIGH;
@@ -89,22 +97,32 @@ void closeMuffler()
 
 ISR(TIMER1_COMPA_vect)
 {
-  OCRegisterValue = currentPeriod * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
+  OCRegisterValue = currentPeriod * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10L;
   // Uncomment to test specific values
-  // OCRegisterValue = 58L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10;
+  // OCRegisterValue = 58L * T56_TO_W58_FACTOR / 1000L * PRESCALER_FACTOR / 1000L / 10L;
   OCR1A = OCRegisterValue;
 }
 
-void speedoPulsed()
+void speedoPulsed()  
 {
-  currentMicros = micros();
-  currentPeriod = (currentMicros - lastPulseAt);
-  lastPulseAt = currentMicros;
+  previousPulseAt = lastPulseAt;
+  lastPulseAt = micros();
 }
 
 void manageSpeedo()
 {
-  
+  currentPeriod = (lastPulseAt - previousPulseAt);
+}
+
+void manageSignalGenerator()
+{
+  generatorMicros = micros();
+  if ((generatorMicros - lastStateChange) > signalGeneratorPeriod)
+  {
+    generatorState = !generatorState;
+    lastStateChange = generatorMicros;
+    digitalWrite(signalGeneratorPin, generatorState);
+  }
 }
 
 int filteredExhaustInput()
@@ -270,7 +288,12 @@ void setupSpeedoControl()
 void setupSerialComms()
 {
   Serial.begin(9600);
-  Serial.println(" UZA80 Exhaust-Speedo Controller");
+  Serial.println("UZA80 Exhaust-Speedo Controller");
+}
+
+void setupSignalGenerator() 
+{
+  pinMode(signalGeneratorPin, OUTPUT);
 }
 
 void setup()
@@ -282,6 +305,8 @@ void setup()
   closeMuffler();
 
   setupSpeedoControl();
+  
+  setupSignalGenerator();
 }
 
 void loop() 
@@ -289,4 +314,7 @@ void loop()
   manageExhaust();
   
   manageSpeedo();
+  
+  // Uncomment this to for generating a testing signal
+  manageSignalGenerator();
 }
