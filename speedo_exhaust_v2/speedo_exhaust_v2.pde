@@ -43,6 +43,13 @@ volatile unsigned long lastPulseAt = 0L;
 volatile unsigned long previousPulseAt = 0L;
 volatile unsigned long currentPeriod = 0L;
 volatile unsigned long OCRegisterValue = 2500L;
+volatile unsigned long period1 = 250000L;
+volatile unsigned long period2 = 250000L;
+volatile unsigned long period3 = 250000L;
+volatile unsigned long period4 = 250000L;
+
+unsigned long lastPeriod = 250000L;
+int speedoPulse = 1;
 
 int currentExhaustInput = HIGH;
 int exhaustPulse = 1;
@@ -106,11 +113,37 @@ void speedoPulsed()
 {
   previousPulseAt = lastPulseAt;
   lastPulseAt = micros();
+  lastPeriod = (lastPulseAt - previousPulseAt);
+  switch (speedoPulse)
+  {
+    case 1:
+    period1 = lastPeriod;
+    speedoPulse++;
+    break;
+    case 2:
+    period2 = lastPeriod;
+    speedoPulse++;
+    break;
+    case 3:
+    period3 = lastPeriod;
+    speedoPulse++;
+    break;
+    case 4:
+    period4 = lastPeriod;
+    speedoPulse = 1;
+  }
 }
 
 void manageSpeedo()
 {
-  currentPeriod = (lastPulseAt - previousPulseAt);
+  // if we haven't received a pulse in 250ms then assume we've stopped
+  if ((micros() - lastPulseAt) > 250000L)
+  {
+    period1 = period2 = period3 = period4 = 250000L;
+  }
+  
+  // 57 / 50 to correct for the 14% over the speedo reads
+  currentPeriod = (period1 + period2 + period3 + period4) / 4 * 57 / 50;
 }
 
 void manageSignalGenerator()
