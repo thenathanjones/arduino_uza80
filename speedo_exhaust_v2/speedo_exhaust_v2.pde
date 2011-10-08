@@ -133,19 +133,20 @@ void speedoPulsed()
     case 4:
     period4 = lastPeriod;
     speedoPulse = 1;
+    break;
   }
 }
 
 void manageSpeedo()
 {
   // if we haven't received a pulse in 250ms then assume we've stopped
-  if ((micros() - lastPulseAt) > 250000L)
-  {
-    period1 = period2 = period3 = period4 = NO_SIGNAL_PERIOD;
-  }
+  //if ((micros() - lastPulseAt) > 250000L)
+  //{
+  //  period1 = period2 = period3 = period4 = NO_SIGNAL_PERIOD;
+  //}
   
   // 57 / 50 to correct for the 14% over the speedo reads
-  currentPeriod = (period1 + period2 + period3 + period4) / 4 * 57 / 50;
+  currentPeriod = (period1 + period2 + period3 + period4) / 4L * 57L / 50L;
 }
 
 void manageSignalGenerator()
