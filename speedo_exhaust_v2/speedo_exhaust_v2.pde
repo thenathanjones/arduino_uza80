@@ -139,11 +139,11 @@ void speedoPulsed()
 
 void manageSpeedo()
 {
-  // if we haven't received a pulse in 250ms then assume we've stopped
-  //if ((micros() - lastPulseAt) > 250000L)
-  //{
-  //  period1 = period2 = period3 = period4 = NO_SIGNAL_PERIOD;
-  //}
+  // if we haven't received a pulse in 50ms then assume we've stopped
+  if ((micros() - lastPulseAt) > 50000L)
+  {
+    period1 = period2 = period3 = period4 = NO_SIGNAL_PERIOD;
+  }
   
   // 57 / 50 to correct for the 14% over the speedo reads
   currentPeriod = (period1 + period2 + period3 + period4) / 4L * 57L / 50L;
