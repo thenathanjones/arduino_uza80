@@ -49,9 +49,8 @@ volatile unsigned long period1 = NO_SIGNAL_PERIOD;
 volatile unsigned long period2 = NO_SIGNAL_PERIOD;
 volatile unsigned long period3 = NO_SIGNAL_PERIOD;
 volatile unsigned long period4 = NO_SIGNAL_PERIOD;
-
-unsigned long lastPeriod = NO_SIGNAL_PERIOD;
-int speedoPulse = 1;
+volatile unsigned long lastPeriod = NO_SIGNAL_PERIOD;
+volatile int speedoPulse = 1;
 
 int currentExhaustInput = HIGH;
 int exhaustPulse = 1;
@@ -112,10 +111,16 @@ ISR(TIMER1_COMPA_vect)
 }
 
 void speedoPulsed()  
+{  
+  recordPulse();
+}
+
+void recordPulse() 
 {
   previousPulseAt = lastPulseAt;
   lastPulseAt = micros();
   lastPeriod = (lastPulseAt - previousPulseAt);
+  
   switch (speedoPulse)
   {
     case 1:
@@ -139,10 +144,10 @@ void speedoPulsed()
 
 void manageSpeedo()
 {
-  // if we haven't received a pulse in 50ms then assume we've stopped
-  if ((micros() - lastPulseAt) > 50000L)
+  // if we haven't received a pulse in a while then assume we've stopped
+  if ((micros() - lastPulseAt) > 500000L)
   {
-    period1 = period2 = period3 = period4 = NO_SIGNAL_PERIOD;
+    recordPulse();
   }
   
   // 57 / 50 to correct for the 14% over the speedo reads
